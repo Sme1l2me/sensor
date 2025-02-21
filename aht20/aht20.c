@@ -1,3 +1,11 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/i2c-dev.h>
+
 #include "../common.h"
 #include "aht20.h"
 
@@ -66,3 +74,45 @@ int AHT20_ReadValue(int file, float *humidity, float *temperature)
   return 0;
 }
 
+int AHT20_Run() 
+{
+  int file;
+  float humidity, temperature;
+
+  //打开i2c设备
+  file = open(I2C_DEVICE, O_RDWR);
+  if (file < 0) {
+    perror("Failed to open the i2c bus");
+    close(file);
+    return 1;
+  }
+
+  //设置设备地址
+  if (ioctl(file, I2C_SLAVE, AHT20_SLAVE_ADDRESS) < 0) {
+    perror("Failed to set aht20 i2c address!");
+    close(file);
+    return 1;
+  }
+
+  //AHT20启动测量
+  if (AHT20_StartMeasure(file) < 0) {
+    AHT20_PRT("AHT20 Start Measure Failed!\n");
+    close(file);
+    return 1;
+  }
+  AHT20_PRT("AHT20 Start Measure success.\n");
+
+  //读取数据并校验CRC
+  if (AHT20_ReadValue(file, &humidity, &temperature) < 0) {
+    AHT20_PRT("AHT20 Read Value Failed!\n");
+    close(file);
+    return 1;
+  }
+
+  //打印结果
+  AHT20_PRT("Humidity: %.2f%% Temperature: %.2f%% \n", humidity, temperature);
+
+  close(file);
+
+  return 0;
+}
