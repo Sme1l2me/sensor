@@ -10,7 +10,7 @@
 #include "aht20.h"
 
 #define I2C_DEVICE            "/dev/i2c-2"
-#define AHT20_SLAVE_ADDRESS   0x70
+#define AHT20_SLAVE_ADDRESS   0x38
 #define AHT20_DELAY_US        (80000)     //delay 80ms
 
 unsigned char Calc_CRC8(unsigned char *message, unsigned char length) {
@@ -32,7 +32,7 @@ unsigned char Calc_CRC8(unsigned char *message, unsigned char length) {
 
 int AHT20_StartMeasure(int file)
 {
-  uint8_t command[3] = {0xAC, 0x33, 0x00};
+  uint8_t command[4] = {0x70, 0xAC, 0x33, 0x00};
 
   if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
@@ -43,9 +43,14 @@ int AHT20_StartMeasure(int file)
 
 int AHT20_ReadValue(int file, float *humidity, float *temperature)
 {
+  uint8_t command[1] = {0x71};
   uint8_t buffer[7];
   uint32_t raw_humidity, raw_temperature;
   uint8_t crc_humidity, crc_temperature;
+
+  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+    return -1;
+  }
 
   if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
     return -1;
@@ -55,16 +60,7 @@ int AHT20_ReadValue(int file, float *humidity, float *temperature)
   crc_humidity = Calc_CRC8(buffer, 5);  // 湿度数据CRC校验（前5个字节）
   crc_temperature = Calc_CRC8(buffer + 3, 3);  // 温度数据CRC校验（后3个字节）
 
-  if (crc_humidity != buffer[5]) {
-      printf("CRC check failed for humidity data!\n");
-      return -1;
-  }
-  if (crc_temperature != buffer[6]) {
-      printf("CRC check failed for temperature data!\n");
-      return -1;
-  }
-
-    // 将数据解析为湿度和温度值
+  // 将数据解析为湿度和温度值
   raw_humidity = ((uint32_t)buffer[1] << 12) | ((uint32_t)buffer[2] << 4) | ((uint32_t)buffer[3] >> 4);
   raw_temperature = ((uint32_t)(buffer[3] & 0x0F) << 16) | ((uint32_t)buffer[4] << 8) | buffer[5];
 
@@ -111,7 +107,7 @@ int AHT20_Run()
 
   //打印结果
   AHT20_PRT("Read environment data:\n");
-  AHT20_PRT("Humidity: %.2f%% Temperature: %.2f%% \n", humidity, temperature);
+  AHT20_PRT("Humidity: %.2f%% Temperature: %.2f°C \n", humidity, temperature);
 
   close(file);
 
