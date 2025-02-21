@@ -9,7 +9,6 @@ do {\
 }while(0)
 #endif
 
-
 int AHT20_StartMeasure(int file);
 int AHT20_ReadValue(int file, float *humidity, float *temperature);
 int AHT20_Run();
