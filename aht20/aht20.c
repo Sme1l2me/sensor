@@ -110,9 +110,26 @@ int AHT20_Run()
   }
 
   //打印结果
+  AHT20_PRT("Read environment data:\n");
   AHT20_PRT("Humidity: %.2f%% Temperature: %.2f%% \n", humidity, temperature);
 
   close(file);
+
+  return 0;
+}
+
+int main() 
+{
+  int ret = 0;
+
+  AHT20_PRT("AHT20 Run Once.\n");
+  ret = AHT20_Run();
+  if(ret != 0) {
+    AHT20_PRT("AHT20 Run Failed!\n");
+    return -1;
+  }
+
+  AHT20_PRT("AHT20 Run Once success.\n");
 
   return 0;
 }
