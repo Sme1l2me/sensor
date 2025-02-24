@@ -11,7 +11,6 @@
 
 #define I2C_DEVICE            "/dev/i2c-2"
 #define M2313_SLAVE_ADDRESS   0x78
-#define M2313_DELAY_US        (40000)     //delay 40ms
 
 int M2313_GetCal(int file)
 {
@@ -20,13 +19,34 @@ int M2313_GetCal(int file)
   if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
-  usleep(M2313_DELAY_US);
+
+  return 0;
+}
+
+int M2313_GetStatus(int file) 
+{
+  uint8_t command[1] = {0x79};
+  uint8_t buffer[1];
+
+  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+    return -1;
+  }
+  
+  while(1) {
+    if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
+      return -1;
+    }
+    if (((buffer[0] >> 5) & 1 ) == 0)
+      M2313_PRT("M2313 ready to read.\n");
+      break;
+  }
+
   return 0;
 }
 
 int M2313_ReadValue(int file, float *pressure, float *temperature)
 {
-  uint8_t command[1] = {0x78};
+  uint8_t command[1] = {0x79};
   uint8_t buffer[6];
   uint32_t raw_bridge, raw_temperature;
   float bridge;
@@ -34,6 +54,7 @@ int M2313_ReadValue(int file, float *pressure, float *temperature)
   if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
+
   if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
     return -1;
   }
@@ -45,13 +66,13 @@ int M2313_ReadValue(int file, float *pressure, float *temperature)
   printf("\n");
 
   //解析数据为电桥值和温度值
-  raw_bridge = ((uint32_t)buffer[2] << 16) | ((uint32_t)buffer[3] << 8) | (uint32_t)buffer[4];
-  raw_temperature = ((uint16_t)buffer[5] << 8) | (uint16_t)buffer[6];
+  raw_bridge = ((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | (uint32_t)buffer[3];
+  raw_temperature = ((uint16_t)buffer[4] << 8) | (uint16_t)buffer[5];
 
   *temperature = (float)(raw_temperature * 190 / 0x10000) - 40;
 
   bridge = (float)raw_bridge * 100 / 0x1000000;
-  *pressure = (bridge - (0x1000000 * 0.1)) * 8.2;     //Pmax:1100 Pmin:0
+  *pressure = (bridge - (0x1000000 * 0.1)) * (1100 / (0.8 * 0x1000000));     //Pmax:1100 Pmin:0
 
   return 0;
 }
@@ -83,6 +104,13 @@ int M2313_Run()
     return 1;
   }
   M2313_PRT("M2313 Get Cal success.\n");
+
+  //M2313获取状态
+  if (M2313_GetStatus(file) < 0) {
+    M2313_PRT("M2313 Get Status Failed!\n");
+        close(file);
+    return 1;
+  }
 
   //读取电桥数据与温度数据
   if (M2313_ReadValue(file, &pressure, &temperature) < 0) {
