@@ -59,11 +59,10 @@ int M2313_ReadValue(int file, float *pressure, float *temperature)
     return -1;
   }
 
-  printf("Raw Data Read from M2313: ");
+  DEBUG("Raw Data Read from M2313:\n");
   for (int i = 0; i < sizeof(buffer); i++) {
-    printf("0x%02X ", buffer[i]);
+    DEBUG("0x%02X\n", buffer[i]);
   }
-  printf("\n");
 
   //解析数据为电桥值和温度值
   raw_bridge = ((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | (uint32_t)buffer[3];
@@ -97,7 +96,7 @@ int M2313_Run()
     return 1;
   }
 
-  //M2313启动测量
+  //启动测量
   if (M2313_GetCal(file) < 0) {
     M2313_PRT("M2313 Get Cal Failed!\n");
     close(file);
@@ -105,14 +104,14 @@ int M2313_Run()
   }
   M2313_PRT("M2313 Get Cal success.\n");
 
-  //M2313获取状态
+  //获取状态
   if (M2313_GetStatus(file) < 0) {
     M2313_PRT("M2313 Get Status Failed!\n");
-        close(file);
+    close(file);
     return 1;
   }
 
-  //读取电桥数据与温度数据
+  //读取压力数据与温度数据
   if (M2313_ReadValue(file, &pressure, &temperature) < 0) {
     M2313_PRT("M2313 Read Value Failed!\n");
     close(file);
