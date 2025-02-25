@@ -9,4 +9,9 @@ do {\
 }while(0)
 #endif
 
+#define UART_DEVICE   "/dev/ttyS7"
+
+int MHZ19D_ReadCo2Value(int fd);
+int MHZ19D_Run();
+
 #endif

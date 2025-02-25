@@ -13,7 +13,7 @@ int QMI8568A_ConfigMode(int file)
 {
   uint8_t command[2] = {CTRL2, 0x00};
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   return 0;
@@ -23,7 +23,7 @@ int QMI8568A_Enable(int file)
 {
   uint8_t command[2] = {CTRL7, 0x83};
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   return 0;
@@ -34,7 +34,7 @@ int QMI8658A_GetStatus(int file)
   uint8_t command[1] = {STATUS};
   uint8_t buffer[1];
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   
@@ -55,7 +55,7 @@ int QMI8658A_ConfigAcceleration(int file)
 {
   uint8_t command[2] = {CTRL2, 0x33};
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   return 0;
@@ -72,7 +72,7 @@ int QMI8658A_ReadAcceleration(int file, float *ax, float *ay, float *az)
   }
 
   command[0] = AX_H;
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
@@ -81,7 +81,7 @@ int QMI8658A_ReadAcceleration(int file, float *ax, float *ay, float *az)
   ax_raw = (buffer[0] << 8) | buffer[1];
 
   command[0] = AY_H;
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
@@ -90,7 +90,7 @@ int QMI8658A_ReadAcceleration(int file, float *ax, float *ay, float *az)
   ay_raw = (buffer[0] << 8) | buffer[1];
 
   command[0] = AZ_H;
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
@@ -110,7 +110,7 @@ int QMI8658A_ConfigAngularRate(int file)
 {
   uint8_t command[2] = {CTRL3, 0x72};
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   return 0;
@@ -127,7 +127,7 @@ int QMI8658A_ReadAngularRate(int file, float *gx, float *gy, float *gz)
   }
 
   command[0] = GX_H;
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
@@ -136,7 +136,7 @@ int QMI8658A_ReadAngularRate(int file, float *gx, float *gy, float *gz)
   gx_raw = (buffer[0] << 8) | buffer[1];
 
   command[0] = GY_H;
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
@@ -145,7 +145,7 @@ int QMI8658A_ReadAngularRate(int file, float *gx, float *gy, float *gz)
   gy_raw = (buffer[0] << 8) | buffer[1];
 
   command[0] = GZ_H;
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
@@ -232,7 +232,7 @@ int main()
 
   QMI8658A_PRT("QMI8658A Run Once.\n");
   ret = QMI8658A_Run();
-  if(ret != 0) {
+  if (ret != 0) {
     QMI8658A_PRT("QMI8658A Run Failed!\n");
     return -1;
   }

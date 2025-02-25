@@ -30,7 +30,7 @@ int AHT20_StartMeasure(int file)
 {
   uint8_t command[4] = {0x70, 0xAC, 0x33, 0x00};
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   usleep(AHT20_DELAY_US);
@@ -44,7 +44,7 @@ int AHT20_ReadValue(int file, float *humidity, float *temperature)
   uint32_t raw_humidity, raw_temperature;
   uint8_t crc_humidity, crc_temperature;
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
 

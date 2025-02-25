@@ -13,7 +13,7 @@ int M2313_GetCal(int file)
 {
   uint8_t command[2] = {0x78, 0xAC};
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
 
@@ -25,7 +25,7 @@ int M2313_GetStatus(int file)
   uint8_t command[1] = {0x79};
   uint8_t buffer[1];
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
   
@@ -48,7 +48,7 @@ int M2313_ReadValue(int file, float *pressure, float *temperature)
   uint32_t raw_bridge, raw_temperature;
   float bridge;
 
-  if(_write_i2c_data_(file, command, sizeof(command)) < 0) {
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
   }
 
