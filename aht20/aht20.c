@@ -9,10 +9,6 @@
 #include "../common.h"
 #include "aht20.h"
 
-#define I2C_DEVICE            "/dev/i2c-2"
-#define AHT20_SLAVE_ADDRESS   0x38
-#define AHT20_DELAY_US        (80000)     //delay 80ms
-
 unsigned char Calc_CRC8(unsigned char *message, unsigned char length) {
   unsigned char i;
   unsigned char byte;

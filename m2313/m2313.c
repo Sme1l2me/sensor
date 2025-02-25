@@ -9,9 +9,6 @@
 #include "../common.h"
 #include "m2313.h"
 
-#define I2C_DEVICE            "/dev/i2c-2"
-#define M2313_SLAVE_ADDRESS   0x78
-
 int M2313_GetCal(int file)
 {
   uint8_t command[2] = {0x78, 0xAC};

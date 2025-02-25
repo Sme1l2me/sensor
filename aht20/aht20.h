@@ -9,6 +9,10 @@ do {\
 }while(0)
 #endif
 
+#define I2C_DEVICE            "/dev/i2c-2"
+#define AHT20_SLAVE_ADDRESS   0x38
+#define AHT20_DELAY_US        (80000)     //delay 80ms
+
 int AHT20_StartMeasure(int file);
 int AHT20_ReadValue(int file, float *humidity, float *temperature);
 int AHT20_Run();
