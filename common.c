@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,61 +26,112 @@ int _read_i2c_data_(int file, unsigned char *readData, size_t length) {
   }
   return 0;
 }
-#if 0
-int _uart_init_(int file) {
-  int uart_fd = open(file, O_RDWR | O_NOCTTY | O_SYNC);
-    if (uart_fd == -1) {
-        perror("Error opening UART");
+
+int init_serial(int *fd, const char *dev) {
+    struct termios opt;
+
+    /* open serial device */
+    if ((*fd = open(dev, O_RDWR)) < 0) {
+        perror("open()");
         return -1;
     }
 
-    struct termios tty;
-    if (tcgetattr(uart_fd, &tty) != 0) {
-        perror("Error getting UART attributes");
-        close(uart_fd);
+    /* define termois */
+    if (tcgetattr(*fd, &opt) < 0) {
+        perror("tcgetattr()");
         return -1;
     }
 
-    cfsetospeed(&tty, B9600);  // 设置波特率为9600
-    cfsetispeed(&tty, B9600);
+    opt.c_lflag  &= ~(ICANON | ECHO | ECHOE | ISIG);
+    opt.c_oflag  &= ~OPOST;
 
-    tty.c_cflag &= ~PARENB;    // 无校验位
-    tty.c_cflag &= ~CSTOPB;    // 1位停止位
-    tty.c_cflag &= ~CSIZE;
-    tty.c_cflag |= CS8;        // 8位数据位
-    tty.c_cflag &= ~CRTSCTS;   // 不使用硬件流控制
-    tty.c_cflag |= CREAD | CLOCAL; // 开启接收器并忽略控制线
+    /* Character length, make sure to screen out this bit before setting the data bit */
+    opt.c_cflag &= ~CSIZE;
 
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // 禁用软件流控制
-    tty.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // 禁用输入处理
+    /* No hardware flow control */
+    opt.c_cflag &= ~CRTSCTS;
 
-    tty.c_oflag &= ~OPOST; // 禁用输出处理
+    /* 8-bit data length */
+    opt.c_cflag |= CS8;
 
-    // 设置新的串口属性
-    if (tcsetattr(uart_fd, TCSANOW, &tty) != 0) {
-        perror("Error setting UART attributes");
-        close(uart_fd);
+    /* 1-bit stop bit */
+    opt.c_cflag &= ~CSTOPB;
+
+    /* No parity bit */
+    opt.c_iflag |= IGNPAR;
+
+    /* Output mode */
+    opt.c_oflag = 0;
+    
+    /* No active terminal mode */
+    opt.c_lflag = 0;
+
+    /* Input baud rate */
+    if (cfsetispeed(&opt, B9600) < 0)
         return -1;
-    }
 
-    return uart_fd;
-}
-
-int _uart_send_data_(int uart_fd, uint8_t* data, size_t len) {
-    if (write(uart_fd, data, len) != len) {
-        perror("Error sending data");
+    /* Output baud rate */
+    if (cfsetospeed(&opt, B9600) < 0)
         return -1;
-    }
+
+    /* Overflow data can be received, but not read */
+    if (tcflush(*fd, TCIFLUSH) < 0)
+        return -1;
+
+    if (tcsetattr(*fd, TCSANOW, &opt) < 0)
+        return -1;
 
     return 0;
 }
 
-int _uart_receive_data_(int uart_fd, uint8_t* buffer, size_t len) {
-    ssize_t n = read(uart_fd, buffer, len);
-    if (n < 0) {
-        perror("Error reading data");
-        return -1;
+int serial_write(int *fd, const char *data, size_t size) {
+    int ret = write(*fd, data, size);
+    if ( ret < 0 ) {
+        perror("write");
+        tcflush(*fd, TCOFLUSH);
     }
-    return n;
+
+    return ret;
 }
-#endif
+
+int serial_read(int *fd, char *data, size_t size) {
+    size_t read_left = size;
+    size_t read_size = 0;
+    char *read_ptr = data;
+    struct timeval timeout = {5, 0};
+
+    memset(data, 0, size);
+
+    fd_set rfds;
+    while (1) {
+        FD_ZERO(&rfds);
+        FD_SET(*fd, &rfds);
+        timeout.tv_sec = 5;
+        timeout.tv_usec = 0;
+
+        if (read_left == 0)
+            break;
+
+        switch (select(*fd+1, &rfds, NULL, NULL, &timeout)) {
+        case -1:
+            perror("select()");
+            break;
+        case 0:
+            perror("timeout and retry");
+            break;
+        default:
+            if (FD_ISSET(*fd,&rfds)) {
+                read_size = read(*fd, read_ptr, read_left);
+                if (read_size == 0)
+                    break;
+
+                read_ptr += read_size;
+                read_left -= read_size;
+            }
+        }
+    }
+
+    return read_size;
+}
+
+
