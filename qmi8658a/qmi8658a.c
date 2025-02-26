@@ -9,9 +9,35 @@
 #include "../common.h"
 #include "qmi8658a.h"
 
-int QMI8568A_ConfigMode(int file) 
+int QMI8658A_SoftReset(int file)
 {
-  uint8_t command[2] = {CTRL2, 0x00};
+  uint8_t command[2] = {RESET, 0xb0};
+  uint8_t resetAddr[1] = {0x4d};
+  uint8_t resetBuffer[1];
+
+  if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
+    return -1;
+  }
+  usleep(15000);
+
+  if (_write_i2c_data_(file, resetAddr, sizeof(command)) < 0) {
+    return -1;
+  }
+  if (_read_i2c_data_(file, resetBuffer, sizeof(resetBuffer)) < 0) {
+    return -1;
+  }
+
+  if(resetBuffer[0] == 0x80) {
+    return 0;
+  } else {
+    QMI8658A_PRT("QMI8658A Soft Reset Failed! resetAddrValue:%x\n", resetBuffer[0]);
+  }
+
+}
+
+int QMI8658A_ConfigMode(int file) 
+{
+  uint8_t command[2] = {CTRL1, 0x00};
 
   if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
@@ -19,9 +45,9 @@ int QMI8568A_ConfigMode(int file)
   return 0;
 }
 
-int QMI8568A_Enable(int file)
+int QMI8658A_Enable(int file)
 {
-  uint8_t command[2] = {CTRL7, 0x83};
+  uint8_t command[2] = {CTRL7, 0x03};
 
   if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
@@ -42,7 +68,7 @@ int QMI8658A_GetStatus(int file)
     if (_read_i2c_data_(file, buffer, sizeof(buffer)) < 0) {
       return -1;
     }
-    if ((buffer[0] & 1 ) & (((buffer[0] >> 1) & 1) == 0))
+    if (((buffer[0] >> 0) & 1 ) & (((buffer[0] >> 1) & 1) == 0))
       QMI8658A_PRT("QMI8658A ready to read.\n");
       break;
   }
@@ -53,7 +79,7 @@ int QMI8658A_GetStatus(int file)
 //aODR 1000hz aFS ±16g
 int QMI8658A_ConfigAcceleration(int file)
 {
-  uint8_t command[2] = {CTRL2, 0x33};
+  uint8_t command[2] = {CTRL2, 0xb3};
 
   if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
@@ -105,10 +131,10 @@ int QMI8658A_ReadAcceleration(int file, float *ax, float *ay, float *az)
   return 0;
 }
 
-//gODR 1793.6hz gFS ±2048g
+//gODR 1793.6hz gFS ±2048°/s
 int QMI8658A_ConfigAngularRate(int file)
 {
-  uint8_t command[2] = {CTRL3, 0x72};
+  uint8_t command[2] = {CTRL3, 0xf2};
 
   if (_write_i2c_data_(file, command, sizeof(command)) < 0) {
     return -1;
@@ -182,7 +208,7 @@ int QMI8658A_Run()
   }
 
   //配置模式
-  if (QMI8568A_ConfigMode(file) < 0) {
+  if (QMI8658A_ConfigMode(file) < 0) {
     QMI8658A_PRT("QMI8658A Config Mode Failed!\n");
     close(file);
     return 1;
@@ -190,7 +216,7 @@ int QMI8658A_Run()
   QMI8658A_PRT("QMI8658A Config Mode success.\n");
 
   //使能
-  if (QMI8568A_Enable(file) < 0) {
+  if (QMI8658A_Enable(file) < 0) {
     QMI8658A_PRT("QMI8658A Enable Failed!\n");
     close(file);
     return 1;
@@ -218,8 +244,9 @@ int QMI8658A_Run()
   }
 
   //打印结果
-  QMI8658A_PRT("Acceleration: AX=%.2fg, AY=%.2fg, AZ=%.2fg", ax, ay, az);
-  QMI8658A_PRT("AngularRate: GX=%.2f°/s, GY=%.2f°/s, GZ=%.2f°/s", gx, gy, gz);
+  QMI8658A_PRT("Acceleration: AX=%.2fg, AY=%.2fg, AZ=%.2fg\n", ax, ay, az);
+  QMI8658A_PRT("AngularRate: GX=%.2f°/s, GY=%.2f°/s, GZ=%.2f°/s\n", gx, gy, gz);
+
 
   close(file);
 

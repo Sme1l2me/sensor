@@ -25,7 +25,7 @@ int _read_i2c_data_(int file, unsigned char *readData, size_t length) {
   }
   return 0;
 }
-
+#if 0
 int _uart_init_(int file) {
   int uart_fd = open(file, O_RDWR | O_NOCTTY | O_SYNC);
     if (uart_fd == -1) {
@@ -82,3 +82,4 @@ int _uart_receive_data_(int uart_fd, uint8_t* buffer, size_t len) {
     }
     return n;
 }
+#endif

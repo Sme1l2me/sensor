@@ -28,6 +28,9 @@ do {\
 #define CTRL7   0x08    //enable sensor and configure data reads
 #define CTRL8   0x09    //motion detection control
 
+#define RESET   0x60
+
+int QMI8658A_SoftReset(int file);
 int QMI8658A_ReadAcceleration(int file, float *ax, float *ay, float *az);
 int QMI8658A_ReadAngularRate(int file, float *gx, float *gy, float *gz);
 int QMI8658A_Run();
